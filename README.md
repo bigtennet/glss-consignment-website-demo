@@ -1,0 +1,92 @@
+# GLSS Global Logistics Security Platform
+
+## Overview
+GLSS is a logistics security portal that lets customers track high-value consignments while operations teams manage shipments, branding, and outgoing notifications from a secure admin dashboard.
+
+### Key Features
+- **Public tracking** with destination/recipient highlights and mission control contact ctas.
+- **Operations dashboard** featuring sidebar navigation, shipment management, live stats, and quick mail desk.
+- **Editable site settings** (branding, hero copy, support contacts, mail sender, SMTP).
+- **Configurable mailer** using PHP `mail()` with optional SMTP settings stored in the database.
+
+## Requirements
+- PHP 8.1+ with `pdo_mysql` enabled
+- MySQL 5.7 / MariaDB 10+ (or compatible)
+- Apache / Nginx serving the `public/` directory (or the repo root if using the provided front-controller files)
+- Composer is **not** required (project uses native PHP)
+
+## Installation
+```bash
+# clone repository
+git clone https://github.com/<your-account>/glss-logistics.git
+cd glss-logistics
+
+# copy files to your web root (example)
+cp -R ./ /opt/lampp/htdocs/shipping-website
+```
+
+### Configure database access
+Edit `config/config.php` and update the `database` credentials to match your environment.
+
+```php
+return [
+    'database' => [
+        'driver' => 'mysql',
+        'host' => '127.0.0.1',
+        'port' => 3306,
+        'name' => 'glss',
+        'username' => 'your_user',
+        'password' => 'your_password',
+    ],
+];
+```
+
+### Create database schema
+You can either run the migration script or import the raw schema.
+
+#### Option 1: using the PHP migration
+```bash
+/opt/lampp/bin/php /opt/lampp/htdocs/shipping-website/database/migrate.php
+```
+This creates the `shipments` and `settings` tables and seeds default site/mail settings.
+
+#### Option 2: import raw SQL
+```bash
+mysql -u root -p glss < database/schema.sql
+```
+
+## Default admin credentials
+- **URL:** `/admin/login.php`
+- **Username:** `admin`
+- **Password:** `changeme123!`
+> Update the password hash in `config/config.php` before deploying to production.
+
+## Customisation
+### Branding, hero copy & contacts
+- Update through the admin dashboard (`Site settings` section). Changes immediately reflect on the public site.
+
+### Mail configuration
+- Configure sender identity and SMTP settings in the admin panel.
+- PHP `mail()` is used under the hood. If SMTP auth is required, configure your host’s MTA accordingly.
+
+## Deployment to pxxl.app
+1. Push this repository to GitHub.
+2. On pxxl.app, create a new app and connect it to the GitHub repo.
+3. Configure environment variables or adjust `config/config.php` as needed.
+4. Ensure the document root points to the project root (contains `public/` and admin assets).
+5. Run the migration script on the hosted environment.
+
+## Useful Scripts
+- **Seed demo shipment:**
+  ```bash
+  /opt/lampp/bin/php -r "require '/opt/lampp/htdocs/shipping-website/includes/bootstrap.php'; $config = swiftship_config(); $db = new SwiftShip\\Database($config['database']); $shipments = new SwiftShip\\Shipments($db->getConnection()); echo $shipments->create(['sender_name'=>'Atlas Defense','recipient_name'=>'Secure Labs','origin'=>'Newnan, GA','destination'=>'Berlin, Germany','status'=>'In Transit']);"
+  ```
+- **Run migrations:** `/opt/lampp/bin/php database/migrate.php`
+
+## Roadmap ideas
+- Add notification history with email logs
+- Implement attachment support for shipment documents
+- Extend admin with activity auditing
+
+## License
+This project is released under the MIT License. See `LICENSE` (create if required) for details.
